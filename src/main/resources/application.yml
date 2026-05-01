@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:weather}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+
+  thymeleaf:
+    cache: false  # 開発中はキャッシュOFF（テンプレート変更がすぐ反映される）
+
+  mvc:
+    format:
+      date: yyyy-MM-dd
+
+weather:
+  api:
+    key: ${WEATHER_API_KEY}
+    url: https://api.openweathermap.org/data/2.5/weather
