@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>エラー | Skylog</title>
+    <title>アクセス権限なし | Skylog</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
             --sky-500: #0ea5e9; --sky-600: #0284c7;
-            --slate-200: #e2e8f0; --slate-400: #94a3b8;
-            --slate-800: #1e293b; --white: #ffffff;
+            --slate-200: #e2e8f0; --slate-400: #94a3b8; --slate-600: #475569;
+            --slate-800: #1e293b; --slate-900: #0f172a; --white: #ffffff;
         }
         body {
             font-family: 'DM Sans', sans-serif;
@@ -31,9 +30,9 @@
 </head>
 <body>
     <div class="error-box">
-        <div class="error-code">500</div>
-        <h1 class="error-title">予期しないエラーが発生しました</h1>
-        <p class="error-msg">申し訳ありません。しばらく時間をおいてから<br>再度お試しください。</p>
+        <div class="error-code">403</div>
+        <h1 class="error-title">アクセス権限がありません</h1>
+        <p class="error-msg">このメモへのアクセス権限がありません。<br>自分のメモのみ閲覧・編集できます。</p>
         <a class="btn-home" th:href="@{/memos}">← メモ一覧に戻る</a>
     </div>
 </body>

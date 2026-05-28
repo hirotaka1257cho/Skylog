@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.example.weather.domain.Memo;
 import com.example.weather.domain.User;
 import com.example.weather.form.MemoCreateForm;
+import com.example.weather.form.MemoSearchForm;
 import com.example.weather.service.MemoService;
 import com.example.weather.service.UserService;
 
@@ -33,11 +34,19 @@ public class MemoController {
     }
 
     @GetMapping("")
-    public String memoList(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String memoList(@AuthenticationPrincipal UserDetails userDetails, MemoSearchForm memoSearchForm,
+            Model model) {
         String email = userDetails.getUsername();
         User user = userService.findByEmail(email);
-        model.addAttribute("list", memoService.getMemoListByUserId(user.getId()));
+        model.addAttribute("memoSearchForm", memoSearchForm);
+
+        if (!memoSearchForm.isEmpty()) {
+            model.addAttribute("list", memoService.search(memoSearchForm, user.getId()));
+        } else {
+            model.addAttribute("list", memoService.getMemoListByUserId(user.getId()));
+        }
         return "memos/list";
+
     }
 
     @GetMapping("/create")
@@ -75,7 +84,7 @@ public class MemoController {
             model.addAttribute("detail", memo);
             return "memos/detail";
         } else {
-            return "error";
+            return "error/forbidden";
         }
 
     }
@@ -95,7 +104,7 @@ public class MemoController {
             model.addAttribute("memoId", memo.getId());
             return "memos/edit";
         } else {
-            return "error";
+            return "error/forbidden";
         }
 
     }
@@ -117,7 +126,7 @@ public class MemoController {
             memoService.update(id, createForm);
             return "redirect:/memos/" + id;
         } else {
-            return "error";
+            return "error/forbidden";
         }
 
     }
@@ -131,7 +140,7 @@ public class MemoController {
             memoService.deleteById(id);
             return "redirect:/memos";
         } else {
-            return "error";
+            return "error/forbidden";
         }
 
     }

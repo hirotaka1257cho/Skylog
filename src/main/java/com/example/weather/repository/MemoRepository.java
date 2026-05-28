@@ -1,13 +1,16 @@
 package com.example.weather.repository;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.jdbc.core.RowMapper;
-
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.example.weather.domain.Memo;
+import com.example.weather.form.MemoSearchForm;
 
 @Repository
 public class MemoRepository {
@@ -78,5 +81,34 @@ public class MemoRepository {
 
     public void deleteById(int id){
         jdbcTemplate.update("DELETE FROM memos WHERE id = ?", id);
+    }
+
+    public List<Memo> search(MemoSearchForm form, int userId){
+        StringBuilder sql = new StringBuilder("SELECT * FROM memos WHERE user_id = ?;");
+        String texts = form.getTexts();
+        String city = form.getCity();
+        LocalDate dateTo = form.getDateTo();
+        LocalDate dateFrom = form.getDateFrom();
+
+        List<Object> params = new ArrayList<>();
+        params.add(userId);
+
+        if(texts != null){
+            sql.append(" AND texts LIKE ?");
+            params.add("%" + texts + "%");
+        }
+        if(city != null){
+            sql.append(" AND city LIKE ?");
+            params.add("%" + city + "%");
+        }
+        if(dateTo != null){
+            sql.append(" AND dates <= ?");
+            params.add(Date.valueOf(dateTo));
+        }
+        if(dateFrom != null){
+            sql.append(" AND dates >= ?");
+            params.add(Date.valueOf(dateFrom));
+        }
+        return jdbcTemplate.query(sql.toString(), MEMO_ROW_MAPPER, params.toArray());
     }
 }
