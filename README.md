@@ -1,6 +1,6 @@
-# 概要
+# 天気メモアプリ
 
-天気情報と日記を紐づけて記録できる天気メモWebアプリです。  
+天気情報と日記を紐づけて記録できる天気メモWebアプリです。
 都市名を入力するとOpenWeatherMap APIからリアルタイムで天気・気温を自動取得し、その日のメモと一緒に記録できます。
 
 ---
@@ -29,49 +29,111 @@
 | 外部API連携 | RestTemplate（OpenWeatherMap API） |
 | テスト | JUnit / Mockito |
 | API仕様書 | Springdoc-openapi（Swagger UI） |
+| コンテナ | Docker / Docker Compose |
+| インフラ | AWS EC2 |
+| CI/CD | GitHub Actions |
 
 ---
 
-## セットアップ手順
+## 構成
+
+アプリはDocker Composeで2つのコンテナを起動して動作します。
+
+```
+ブラウザ
+   │  http://localhost:8080
+   ▼
+┌─────────────────────────────┐
+│  app コンテナ（Spring Boot）   │
+│  - 画面表示・REST API          │
+│  - 8080番で待ち受け            │
+└───────────────┬─────────────┘
+                │ db:5432 で接続
+                ▼
+┌─────────────────────────────┐
+│  db コンテナ（PostgreSQL）     │
+│  - 起動時に schema.sql を実行   │
+└─────────────────────────────┘
+```
+
+---
+
+## ローカルでの起動（Docker）
 
 ### 1. 必要な環境
 
-- Java 21
-- PostgreSQL
-- Maven
+- Docker / Docker Compose
 
-### 2. データベースの作成
+Java や PostgreSQL を個別にインストールする必要はありません。すべてコンテナ内で動作します。
 
-```sql
-CREATE DATABASE weather;
+### 2. 環境変数の設定
+
+プロジェクト直下に `.env` ファイルを作成し、OpenWeatherMap の APIキーを設定します。
+
+```
+WEATHER_API_KEY=取得したOpenWeatherMapのAPIキー
 ```
 
-### 3. テーブルの作成
+APIキーは [OpenWeatherMap](https://openweathermap.org/) で無料登録後に取得できます。
 
-`src/main/resources/sql/schema.sql` をPostgreSQLで実行してください。
-
-```bash
-psql -U postgres -d weather -f src/main/resources/sql/schema.sql
-```
-
-### 4. 環境変数の設定
-
-以下の環境変数を設定してください。
+### 3. 起動
 
 ```bash
-export WEATHER_API_KEY=取得したOpenWeatherMapのAPIキー
-export DB_PASS=PostgreSQLのパスワード  # デフォルト: postgres
-```
-
-OpenWeatherMap APIキーは https://openweathermap.org/ で無料登録後に取得できます。
-
-### 5. アプリの起動
-
-```bash
-./mvnw spring-boot:run
+docker compose up --build
 ```
 
 起動後、ブラウザで http://localhost:8080/users/login にアクセスしてください。
+
+停止する場合は `Ctrl + C`、バックグラウンドで起動する場合は `-d` を付けます。
+
+```bash
+docker compose up --build -d
+```
+
+---
+
+## AWS EC2 へのデプロイ
+
+EC2（Amazon Linux）上に Docker をインストールし、同じ `docker compose` でアプリを起動します。
+
+### 環境構築
+
+リポジトリ直下の `setup.sh` を実行すると、Docker・Git・Docker Compose などEC2に必要なツールが一括でインストールされます。
+
+```bash
+bash setup.sh
+```
+
+### 起動
+
+EC2上でリポジトリを取得し、`.env` を作成してから起動します。
+
+```bash
+git clone https://github.com/hirotaka1257cho/Skylog.git
+cd Skylog
+# .env を作成（WEATHER_API_KEY を記載）
+docker compose up --build -d
+```
+
+ブラウザで `http://<EC2のパブリックIP>:8080` にアクセスすると利用できます。
+
+---
+
+## 自動デプロイ（CI/CD）
+
+`main` ブランチへ push すると、GitHub Actions が自動で EC2 に SSH 接続し、最新コードの取得とコンテナの再起動を行います。
+
+```
+main へ push
+   ▼
+GitHub Actions 起動
+   ▼
+EC2 に SSH 接続
+   ▼
+git pull → docker compose up --build -d
+```
+
+ワークフローの定義は `.github/workflows/deploy.yml` にあります。
 
 ---
 
