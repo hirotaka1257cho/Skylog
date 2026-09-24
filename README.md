@@ -30,6 +30,7 @@
 | テスト | JUnit / Mockito |
 | API仕様書 | Springdoc-openapi（Swagger UI） |
 | コンテナ | Docker / Docker Compose |
+| Webサーバー | Nginx（リバースプロキシ） |
 | インフラ | AWS EC2 |
 | CI/CD | GitHub Actions |
 
@@ -37,12 +38,20 @@
 
 ## 構成
 
-アプリはDocker Composeで2つのコンテナを起動して動作します。
+アプリはDocker Composeで3つのコンテナを起動して動作します。
+外部からのアクセスはNginx（80番）が受け、Spring Bootアプリへ転送します。アプリとDBのポートはNginx経由でのみ利用する想定です。
 
 ```
 ブラウザ
-   │  http://localhost:8080
+   │  http://localhost （EC2では http://<パブリックIP>）
    ▼
+┌─────────────────────────────┐
+│  nginx コンテナ              │
+│  - 80番で待ち受け            │
+│  - リバースプロキシ          │
+└───────────────┬─────────────┘
+                │ app:8080 へ転送
+                ▼
 ┌─────────────────────────────┐
 │  app コンテナ（Spring Boot） │
 │  - 画面表示・REST API        │
@@ -53,8 +62,11 @@
 ┌─────────────────────────────┐
 │  db コンテナ（PostgreSQL）   │
 │  - 起動時に schema.sql を実行│
+│  - データはボリュームに保存  │
 └─────────────────────────────┘
 ```
+
+各コンテナは `restart: always` を設定しているため、EC2の再起動後も自動で立ち上がります。
 
 ---
 
@@ -82,7 +94,7 @@ APIキーは [OpenWeatherMap](https://openweathermap.org/) で無料登録後に
 docker compose up --build
 ```
 
-起動後、ブラウザで http://localhost:8080/users/login にアクセスしてください。
+起動後、ブラウザで http://localhost/users/login にアクセスしてください。
 
 停止する場合は `Ctrl + C`、バックグラウンドで起動する場合は `-d` を付けます。
 
@@ -115,7 +127,9 @@ cd Skylog
 docker compose up --build -d
 ```
 
-ブラウザで `http://<EC2のパブリックIP>:8080` にアクセスすると利用できます。
+ブラウザで `http://<EC2のパブリックIP>` にアクセスすると利用できます。
+
+セキュリティグループでは、HTTP（80番）と SSH（22番、自動デプロイ用）を許可しています。
 
 ---
 
@@ -142,7 +156,7 @@ git pull → docker compose up --build -d
 アプリ起動後、以下のURLでSwagger UIを確認できます。
 
 ```
-http://localhost:8080/swagger-ui/index.html
+http://localhost/swagger-ui/index.html
 ```
 
 ---
