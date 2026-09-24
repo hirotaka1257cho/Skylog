@@ -106,7 +106,9 @@ docker compose up --build -d
 
 ## AWS EC2 へのデプロイ
 
-EC2（Amazon Linux）上に Docker をインストールし、同じ `docker compose` でアプリを起動します。
+> **現在はコスト削減のため EC2 インスタンスを削除しており、公開していません。** 以下は公開していたときの手順です。
+
+EC2（Amazon Linux）上に Docker をインストールし、ローカルと同じ `docker compose` でアプリを起動していました。
 
 ### 環境構築
 
@@ -127,15 +129,15 @@ cd Skylog
 docker compose up --build -d
 ```
 
-ブラウザで `http://<EC2のパブリックIP>` にアクセスすると利用できます。
+ブラウザで `http://<EC2のパブリックIP>` にアクセスして利用していました。
 
-セキュリティグループでは、HTTP（80番）と SSH（22番、自動デプロイ用）を許可しています。
+セキュリティグループでは、HTTP（80番）と SSH（22番、自動デプロイ用）を許可していました。
 
 ---
 
 ## 自動デプロイ（CI/CD）
 
-`main` ブランチへ push すると、GitHub Actions が自動で EC2 に SSH 接続し、最新コードの取得とコンテナの再起動を行います。
+EC2 で公開していた間は、`main` ブランチへ push すると GitHub Actions が自動で EC2 に SSH 接続し、最新コードの取得とコンテナの再起動を行っていました。
 
 ```
 main へ push
@@ -148,6 +150,7 @@ git pull → docker compose up --build -d
 ```
 
 ワークフローの定義は `.github/workflows/deploy.yml` にあります。
+EC2 を削除したため、現在は push では動かず、GitHub の Actions 画面から手動で実行する設定（`workflow_dispatch`）にしています。
 
 ---
 
